@@ -18,30 +18,65 @@ android {
         }
     }
     
+    signingConfigs {
+        release {
+            // Configure with your keystore properties
+            // You can set these via gradle.properties or environment variables
+            storeFile file(System.getenv("KEYSTORE_FILE") ?: "keystore.jks")
+            storePassword System.getenv("KEYSTORE_PASSWORD")
+            keyAlias System.getenv("KEY_ALIAS")
+            keyPassword System.getenv("KEY_PASSWORD")
+        }
+    }
+    
     buildTypes {
         release {
             minifyEnabled true
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
+            
+            // Optimization flags for mining performance
+            ndk {
+                debugSymbolLevel 'full'
+            }
         }
         debug {
             debuggable true
+            ndk {
+                debugSymbolLevel 'full'
+            }
         }
     }
     
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
     
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '11'
     }
     
     externalNativeBuild {
         cmake {
             path "src/main/cpp/CMakeLists.txt"
+            version "3.22.1"
         }
+    }
+    
+    // Performance optimizations for mining
+    packagingOptions {
+        exclude 'META-INF/proguard/androidx-*.pro'
+        exclude 'META-INF/*.kotlin_module'
+    }
+    
+    buildFeatures {
+        // Disable unused features to reduce overhead
+        aidl false
+        renderScript false
+        resValues false
+        shaders false
     }
 }
 
@@ -51,6 +86,9 @@ dependencies {
     implementation 'com.google.android.material:material:1.9.0'
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.6.1'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.1'
+    
+    // Optional: for better thread management in mining
+    implementation 'androidx.concurrent:concurrent-futures-ktx:1.1.0'
     
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'
